@@ -7,5 +7,8 @@
         "_default": {
             "link": "Coca Cola Shopper Activation Portal"
         }
+    }, 
+    "global": {
+        "parseVersion": "1.2.18"
     }
 }
