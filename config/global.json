@@ -1,0 +1,11 @@
+{
+    "applications": {
+        "Coca Cola Shopper Activation Portal": {
+            "applicationId": "BawfUp9SVBuXPxkP5TXtfFNAQL70rifOGgck3qgj", 
+            "masterKey": "Yfk3AfWMPpwSle5srPlAA6IGSZIMlsd7QMcGMOeP"
+        }, 
+        "_default": {
+            "link": "Coca Cola Shopper Activation Portal"
+        }
+    }
+}
