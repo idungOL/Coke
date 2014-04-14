@@ -111,20 +111,45 @@ var shopperObj = {"__type":"Pointer","className":"shoppers","objectId":shopper_i
 			 					var reqPoints = myPrize[0].get("p_point");
 			 					if(rp_points>reqPoints){
 						 			//response.success("redempt");
-						 			//insert validation here before saving
+						 			//insert validation here before saving						 			
 						 			var shop_reds = Parse.Object.extend("shopper_redemption");
 						 			var myPrizeObj = {"__type":"Pointer","className":"prizes","objectId":myPrize[0].id};
-						 			var shop_red = new shop_reds();
-						 			shop_red.set("sr_s_id", shopperObj);
-						 			shop_red.set("sr_p_id", myPrizeObj);
-						 			shop_red.save({
-						 				success: function(){
-							 				response.success("Redemption Successful");
-						 				},
-						 				error: function(error){
-							 				response.error(error);
-						 				}
+						 			var newSRQuery = new Parse.Query(shop_reds);
+						 			newSRQuery.equalTo("sr_s_id", shopperObj);
+						 			newSRQuery.equalTo("sr_p_id", myPrizeObj);
+						 			newSRQuery.find()
+						 			.then(function(checkSR){
+							 			if(typeof checkSR != 'undefined'){
+								 			if(checkSR.length == 0){
+								 			
+									 			var shop_red = new shop_reds();
+									 			shop_red.set("sr_s_id", shopperObj);
+									 			shop_red.set("sr_p_id", myPrizeObj);
+									 			shop_red.save({
+									 				success: function(){
+										 				response.success("Redemption Successful");
+									 				},
+									 				error: function(error){
+										 				response.error(error);
+									 				}
+									 			});									 			
+									 			
+								 			}else{
+								 			
+									 			response.error("Duplicate redemption.")
+								 			
+								 			}
+								 			
+								 			
+							 			}else{
+							 			
+								 			response.error("Invalid shopper_redemtion query.")
+							 			
+							 			}
+							 			
 						 			});
+						 			
+						 			
 						 			
 						 			
 					 			}else{
@@ -137,16 +162,50 @@ var shopperObj = {"__type":"Pointer","className":"shoppers","objectId":shopper_i
 		 					
 	 					}else{
 	 						response.error("Rewards not found.");
-	 					}
-	 					
-	 					
- 					
- 				
-			 			
-		 			
+	 					}		 			
 		 			});
 	 			}
  });
  
+});
+
+
+Parse.Cloud.define("avail_promo", function(request, response) {
+
+Parse.Cloud.useMasterKey();
+var rp_id = request.params.rewards_point_id;
+var rewardObj = {"__type":"Pointer","className":"rewards_point","objectId":rp_id};
+var shopper_id = request.params.shopper_id;	
+var shopperObj = {"__type":"Pointer","className":"shoppers","objectId":shopper_id};
+
+var shopper_points = Parse.Object.extend("shopper_points");
+var spQuery = new Parse.Query(shopper_points);
+
+spQuery.equalTo("sp_s_id", shopperObj);
+spQuery.equalTo("sp_rp_id", rewardObj);
+spQuery.find()
+	.then(function(mySP){
+		if(typeof mySP != 'undefined'){			
+			if(mySP.length == 0){
+				var shopper_point = new shopper_points();
+				shopper_point.set("sp_s_id", shopperObj);
+				shopper_point.set("sp_rp_id", rewardObj);
+				shopper_point.save({
+	 				success: function(){
+		 				response.success("Success!");
+	 				},
+	 				error: function(error){
+		 				response.error(error);
+	 				}
+	 			});			
+	 				
+	 		}else{
+				response.error("You have already availed this promo.")
+			}
+		
+		}else{
+			response.error("Invalid shopper_points query.");
+		}		
+	}); 
 });
 
