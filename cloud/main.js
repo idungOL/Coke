@@ -157,7 +157,7 @@ var shopperObj = {"__type":"Pointer","className":"shoppers","objectId":shopper_i
 					 			}
 					 			
 					 		}else{
-						 		response.error("Rewards not found.");
+						 		response.error("Prize for this reward can not be found.");
 					 		}
 		 					
 	 					}else{
