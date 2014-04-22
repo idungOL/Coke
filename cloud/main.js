@@ -209,3 +209,121 @@ spQuery.find()
 	}); 
 });
 
+
+
+Parse.Cloud.define("sample_promo", function(request, response) {
+
+Parse.Cloud.useMasterKey();
+var keyword = request.params.keyword;
+var shopper_id = request.params.shopper_id;	
+var shopperObj = {"__type":"Pointer","className":"shoppers","objectId":shopper_id};
+
+var shopper_points = Parse.Object.extend("shopper_points");
+var spQuery = new Parse.Query(shopper_points);
+
+spQuery.equalTo("sp_s_id", shopperObj);
+spQuery.equalTo("sp_rp_id", rewardObj);
+spQuery.find()
+	.then(function(mySP){
+		if(typeof mySP != 'undefined'){			
+			if(mySP.length == 0){
+				var shopper_point = new shopper_points();
+				shopper_point.set("sp_s_id", shopperObj);
+				shopper_point.set("sp_rp_id", rewardObj);
+				shopper_point.save({
+	 				success: function(){
+		 				response.success("Success!");
+	 				},
+	 				error: function(error){
+		 				response.error(error);
+	 				}
+	 			});			
+	 				
+	 		}else{
+				response.error("You have already availed this promo.")
+			}
+		
+		}else{
+			response.error("Invalid shopper_points query.");
+		}		
+	}); 
+});
+
+
+
+//query for valid rewards with prizes
+
+Parse.Cloud.define("get_rewards", function(request, response) {
+
+Parse.Cloud.useMasterKey();
+var shopper_id = request.params.shopper_id;	
+var shopperObj = {"__type":"Pointer","className":"shoppers","objectId":shopper_id};
+
+//query shopper_redemption
+var shopper_redemptions =  Parse.Object.extend("shopper_redemption");
+var srQuery = new Parse.Query(shopper_redemptions);
+srQuery.equalTo("sr_s_id", shopperObj);
+srQuery.include("sr_p_id.p_r_id");
+srQuery.find()
+	.then(function(exp){
+	
+		//var srpid = exp[0].get("sr_p_id");
+		var prid = new Array();
+		
+		
+		for(var x=0; x<exp.length;x++){
+			prid[x] = exp[x].get("sr_p_id").get("p_r_id").id;
+			
+		}
+		
+		//rewards query with date validation
+		var rewards = Parse.Object.extend("rewards");
+		var rwQuery = new Parse.Query(rewards);
+		var d = new Date();
+		var thisDay = new Date(d.getTime());
+		
+		rwQuery.greaterThanOrEqualTo("r_to", thisDay);
+		rwQuery.lessThanOrEqualTo("r_from", thisDay);
+		rwQuery.notContainedIn("objectId", prid);
+		
+		rwQuery.find()
+			.then(function(ValidRewards){
+				
+				
+				if(typeof ValidRewards != 'undefined'){
+					if(ValidRewards.length>0){
+						
+						var pr = new Array();
+						for(var y = 0; y < ValidRewards.length; y++){
+							pr[y] = {"__type":"Pointer","className":"rewards","objectId":ValidRewards[y].id};
+													
+						}
+						//response.success(pr);
+						
+						var prizes = Parse.Object.extend("prizes");
+						var pQuery = new Parse.Query(prizes);
+						pQuery.include("p_r_id");
+						pQuery.containedIn("p_r_id",pr);
+						pQuery.find()
+							.then(function(myPrizes){
+								response.success(myPrizes);
+							});
+						
+												
+						
+					}else{
+						response.error("No Available Rewards.");
+					}
+				}else{
+					response.error("No available Rewards.");
+				}
+				
+			});
+		//end rewards query
+		
+		
+	});
+
+});
+
+
